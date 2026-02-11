@@ -6,23 +6,19 @@ const db = require("./models");
 
 const app = express();
 
-app.use(express.json());
-app.use(morgan("dev"));
-
-const cors = require('cors');
-
+// CORS configuration (IMPORTANT)
 app.use(cors({
-  origin: [
-    'http://localhost:5173',
-    'https://cloud-return-on-investment.onrender.com'
-  ],
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  origin: ["http://localhost:5173"],
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   credentials: true
 }));
 
-app.options('*', cors());
+app.options("*", cors());
 
+app.use(express.json());
+app.use(morgan("dev"));
 
+// Routes
 app.use("/api/analytics", require("./routes/analytics"));
 app.use("/api/customers", require("./routes/customers"));
 app.use("/api/dashboard", require("./routes/dashboard"));
