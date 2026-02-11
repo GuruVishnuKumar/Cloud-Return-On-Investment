@@ -6,19 +6,22 @@ const db = require("./models");
 
 const app = express();
 
-// CORS configuration (IMPORTANT)
-app.use(cors({
-  origin: ["http://localhost:5173"],
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  credentials: true
-}));
-
-app.options("*", cors());
+/* ------------------ CORS ------------------ */
+app.use(
+  cors({
+    origin:
+      process.env.NODE_ENV === "production"
+        ? ["https://cloud-roi.vercel.app"]
+        : ["http://localhost:5173"],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    credentials: true,
+  })
+);
 
 app.use(express.json());
 app.use(morgan("dev"));
 
-// Routes
+/* ------------------ ROUTES ------------------ */
 app.use("/api/analytics", require("./routes/analytics"));
 app.use("/api/customers", require("./routes/customers"));
 app.use("/api/dashboard", require("./routes/dashboard"));
@@ -29,10 +32,38 @@ app.get("/", (req, res) => {
   res.json({ message: "Cloud ROI Backend Running 🚀" });
 });
 
+/* ------------------ DATABASE + SERVER START ------------------ */
+
 const PORT = process.env.PORT || 5000;
 
-db.sequelize.sync().then(() => {
-  app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-  });
-});
+async function startServer() {
+  try {
+    await db.sequelize.authenticate();
+    console.log("Database connected ✅");
+
+    await db.sequelize.sync();
+    console.log("Database synced ✅");
+
+    // Auto seed plans if empty
+    const planCount = await db.Plan.count();
+
+    if (planCount === 0) {
+      await db.Plan.bulkCreate([
+        { name: "Basic", minUsers: 1, maxUsers: 100, pricePerUser: 500 },
+        { name: "Pro", minUsers: 101, maxUsers: 500, pricePerUser: 400 },
+        { name: "Enterprise", minUsers: 501, maxUsers: 3000, pricePerUser: 300 },
+      ]);
+
+      console.log("Default Plans Inserted ✅");
+    }
+
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT} 🚀`);
+    });
+
+  } catch (error) {
+    console.error("Startup Error ❌:", error);
+  }
+}
+
+startServer();

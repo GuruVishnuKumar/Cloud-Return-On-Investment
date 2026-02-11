@@ -1,59 +1,62 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const db = require('../models');
+const db = require("../models");
+const { Op } = require("sequelize");
 
 // POST /api/roi/calculate
-router.post('/calculate', async (req, res) => {
+router.post("/calculate", async (req, res) => {
   const { users, cloudCost } = req.body;
 
-  if (!users || !cloudCost) {
-    return res.status(400).json({ message: 'Please provide users count and cloud cost' });
+  // Better validation
+  if (users == null || cloudCost == null) {
+    return res.status(400).json({
+      message: "Please provide users count and cloud cost",
+    });
   }
 
   try {
-    // Determine Plan based on users
+    // Find matching plan safely
     const plan = await db.Plan.findOne({
-      where: db.Sequelize.literal(`"minUsers" <= ${users} AND "maxUsers" >= ${users}`)
+      where: {
+        minUsers: { [Op.lte]: users },
+        maxUsers: { [Op.gte]: users },
+      },
     });
 
     if (!plan) {
-      return res.status(400).json({ message: 'No suitable plan found for this user count (50-3000 users)' });
+      return res.status(400).json({
+        message: "No suitable plan found for this user count",
+      });
     }
 
-    // Calculate Revenue
     const revenue = users * plan.pricePerUser;
-
-    // Calculate ROI
-    // ROI = (Revenue - Cloud Cost) / Cloud Cost * 100
     const roi = ((revenue - cloudCost) / cloudCost) * 100;
 
-    // Generate Recommendations & Status
     let statusMessage = "";
     let recommendations = [];
 
     if (roi < 25) {
-        statusMessage = "Cloud infrastructure cost too high. Optimize resources.";
-        recommendations = [
-            "Right-sizing instances: Switch to smaller instance types if utilization is low.",
-            "Auto-scaling: Implement auto-scaling to match demand peaks.",
-            "Reserved instances: Purchase reserved capacity for steady-state workloads.",
-            "Serverless: Migrate sporadic workloads to serverless functions."
-        ];
+      statusMessage = "Cloud infrastructure cost too high. Optimize resources.";
+      recommendations = [
+        "Right-sizing instances",
+        "Enable auto-scaling",
+        "Use reserved instances",
+        "Consider serverless workloads",
+      ];
     } else {
-        statusMessage = "Cloud operations healthy and profitable.";
-        recommendations = [
-            "Scale Marketing: ROI is healthy, invest in customer acquisition.",
-            "Enterprise Targeting: Focus on high-value enterprise features.",
-            "Expand Regions: Consider deploying to new geographic regions."
-        ];
+      statusMessage = "Cloud operations healthy and profitable.";
+      recommendations = [
+        "Scale marketing efforts",
+        "Target enterprise customers",
+        "Expand to new regions",
+      ];
     }
 
-    // Save calculation history
     await db.CalculationHistory.create({
       usersCount: users,
       cloudCost: parseFloat(cloudCost),
-      revenue: revenue,
-      roiPercentage: roi
+      revenue,
+      roiPercentage: roi,
     });
 
     res.json({
@@ -63,12 +66,12 @@ router.post('/calculate', async (req, res) => {
       cloudCost: parseFloat(cloudCost),
       roiPercentage: roi.toFixed(2),
       statusMessage,
-      recommendations
+      recommendations,
     });
 
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Server Error' });
+    res.status(500).json({ message: "Server Error" });
   }
 });
 
