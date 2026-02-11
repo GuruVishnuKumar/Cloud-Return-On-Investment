@@ -9,15 +9,19 @@ const app = express();
 app.use(express.json());
 app.use(morgan("dev"));
 
-app.use(
-  cors({
-    origin: [
-      "http://localhost:3000",
-      "https://cloud-roi.vercel.app"
-    ],
-    credentials: true
-  })
-);
+const cors = require('cors');
+
+app.use(cors({
+  origin: [
+    'http://localhost:5173',
+    'https://cloud-return-on-investment.onrender.com'
+  ],
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  credentials: true
+}));
+
+app.options('*', cors());
+
 
 app.use("/api/analytics", require("./routes/analytics"));
 app.use("/api/customers", require("./routes/customers"));
