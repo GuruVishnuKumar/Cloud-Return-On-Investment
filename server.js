@@ -20,14 +20,6 @@ app.use("/api/dashboard", require("./routes/dashboard"));
 app.use("/api/plans", require("./routes/plans"));
 app.use("/api/roi", require("./routes/roi"));
 
-
-/* ------------------ ROUTES ------------------ */
-app.use("/api/analytics", require("./routes/analytics"));
-app.use("/api/customers", require("./routes/customers"));
-app.use("/api/dashboard", require("./routes/dashboard"));
-app.use("/api/plans", require("./routes/plans"));
-app.use("/api/roi", require("./routes/roi"));
-
 app.get("/", (req, res) => {
   res.json({ message: "Cloud ROI Backend Running 🚀" });
 });
