@@ -6,20 +6,20 @@ const db = require("./models");
 
 const app = express();
 
-/* ------------------ CORS ------------------ */
-app.use(
-  cors({
-    origin:
-      process.env.NODE_ENV === "production"
-        ? ["https://cloud-roi.vercel.app"]
-        : ["http://localhost:5173"],
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    credentials: true,
-  })
-);
+/* 🔥 CORS FIRST */
+app.use(cors());
+app.options("*", cors());
 
 app.use(express.json());
 app.use(morgan("dev"));
+
+/* ROUTES AFTER CORS */
+app.use("/api/analytics", require("./routes/analytics"));
+app.use("/api/customers", require("./routes/customers"));
+app.use("/api/dashboard", require("./routes/dashboard"));
+app.use("/api/plans", require("./routes/plans"));
+app.use("/api/roi", require("./routes/roi"));
+
 
 /* ------------------ ROUTES ------------------ */
 app.use("/api/analytics", require("./routes/analytics"));
