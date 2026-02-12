@@ -6,14 +6,13 @@ const db = require("./models");
 
 const app = express();
 
-/* 🔥 CORS FIRST */
+/* ✅ CORS (ONLY THIS — nothing else) */
 app.use(cors());
-app.options("*", cors());
 
 app.use(express.json());
 app.use(morgan("dev"));
 
-/* ROUTES AFTER CORS */
+/* ROUTES */
 app.use("/api/analytics", require("./routes/analytics"));
 app.use("/api/customers", require("./routes/customers"));
 app.use("/api/dashboard", require("./routes/dashboard"));
@@ -24,7 +23,7 @@ app.get("/", (req, res) => {
   res.json({ message: "Cloud ROI Backend Running 🚀" });
 });
 
-/* ------------------ DATABASE + SERVER START ------------------ */
+/* ---------------- DATABASE + SERVER START ---------------- */
 
 const PORT = process.env.PORT || 5000;
 
